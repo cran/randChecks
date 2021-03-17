@@ -23,22 +23,38 @@
 \description{Internal \code{randChecks} functions}
 \usage{
   getBlockPerm(subclassIndicatorTable)
-  permuteData.constrainedStandardizedCovMeanDiffs(X, indicator, threshold)
-  permuteData.blocked.constrainedStandardizedCovMeanDiffs(X,indicator,subclass,threshold)
-  permuteData.constrainedMD(X, indicator, threshold)
-  permuteData.blocked.constrainedMD(X, indicator, subclass, threshold)
-  getCompletePerms.balance(X, indicator, perms = 1000)
-  getBlockPerms.balance(X, indicator, subclass, perms = 1000)
-  getConstrainedDiffsPerms.balance(X, indicator, threshold, perms = 1000)
-  getConstrainedDiffsBlockedPerms.balance(X, indicator, subclass, threshold, perms = 1000)
-  getConstrainedMDPerms.balance(X, indicator, threshold, perms = 1000)
-  getConstrainedMDBlockedPerms.balance(X, indicator, subclass, threshold, perms = 1000)
-  getCompletePerms.md(X, indicator, perms = 1000)
-  getBlockPerms.md(X, indicator, subclass, perms = 1000)
-  getConstrainedDiffsPerms.md(X, indicator, threshold, perms = 1000)
-  getConstrainedMDPerms.md(X, indicator, threshold, perms = 1000)
-  getConstrainedDiffsBlockedPerms.md(X, indicator, subclass, threshold, perms = 1000)
-  getConstrainedMDBlockedPerms.md(X, indicator, subclass, threshold, perms = 1000)
+  permuteData.constrainedStandardizedCovMeanDiffs(X.matched, indicator.matched,
+  threshold, X.full = NULL, indicator.full = NULL)
+  permuteData.blocked.constrainedStandardizedCovMeanDiffs(X.matched, indicator.matched,
+  subclass, threshold, X.full = NULL, indicator.full = NULL)
+  permuteData.constrainedMD(X.matched, indicator.matched, threshold, X.full = NULL)
+  permuteData.blocked.constrainedMD(X.matched, indicator.matched,
+  subclass, threshold, X.full = NULL)
+  getCompletePerms.balance(X.matched, indicator.matched,
+  perms = 1000, X.full = NULL, indicator.full = NULL)
+  getBlockPerms.balance(X.matched, indicator.matched,
+  subclass, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getConstrainedDiffsPerms.balance(X.matched, indicator.matched,
+  threshold, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getConstrainedDiffsBlockedPerms.balance(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getConstrainedMDPerms.balance(X.matched, indicator.matched,
+  threshold, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getConstrainedMDBlockedPerms.balance(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getCompletePerms.md(X.matched, indicator.matched,
+  perms = 1000, X.full = NULL)
+  getBlockPerms.md(X.matched, indicator.matched,
+  subclass, perms = 1000, X.full = NULL)
+  getConstrainedDiffsPerms.md(X.matched, indicator.matched,
+  threshold, perms = 1000, X.full = NULL, indicator.full = NULL)
+  getConstrainedMDPerms.md(X.matched, indicator.matched,
+  threshold, perms = 1000, X.full = NULL)
+  getConstrainedDiffsBlockedPerms.md(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000,
+  	X.full = NULL, indicator.full = NULL)
+  getConstrainedMDBlockedPerms.md(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000, X.full = NULL)
   getAssignmentColor(assignment)
 }
 \author{Zach Branson}

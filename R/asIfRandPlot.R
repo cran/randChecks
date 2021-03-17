@@ -7,18 +7,19 @@
 #-constrained standardized diffs randomization ("constrained diffs")
 #-blocked constrained MD randomization ("blocked constrained md")
 #-blocked constrained standardized diffs randomization ("blocked constrained diffs")
-asIfRandPlot = function(X,
-  indicator,
+asIfRandPlot = function(X.matched,
+  indicator.matched,
   assignment = c("complete"),
   subclass = NULL, threshold = NULL,
-  perms = 1000){
+  perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #must provide a covariate matrix
-  if(is.null(X)){
-    stop("Error: Must provide a covariate matrix X.")
+  if(is.null(X.matched)){
+    stop("Error: Must provide a covariate matrix X.matched.")
   }
   #must provide an indicator
-  if(is.null(indicator)){
-    stop("Error: Must provide an indicator of 1s and 0s.")
+  if(is.null(indicator.matched)){
+    stop("Error: Must provide an indicator (indicator.matched) of 1s and 0s.")
   }
   #must provide an assignment mechanism
   if(is.null(assignment)){
@@ -63,38 +64,55 @@ asIfRandPlot = function(X,
   plot.x.vec = vector()
   plot.y.vec = vector()
   if("complete" %in% assignment){
-    compPerms = getCompletePerms.md(X = X, indicator = indicator, perms = perms)
+    compPerms = getCompletePerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      perms = perms, X.full = X.full)
     plot.x.vec = append(plot.x.vec, compPerms)
     plot.y.vec = append(plot.y.vec, stats::density(compPerms)$y)
   }
   if("blocked" %in% assignment){
-    blockPerms = getBlockPerms.md(X = X, indicator = indicator, subclass = subclass, perms = perms)
+    blockPerms = getBlockPerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, perms = perms,
+      X.full = X.full)
     plot.x.vec = append(plot.x.vec, blockPerms)
     plot.y.vec = append(plot.y.vec, stats::density(blockPerms)$y)
   }
   if("constrained diffs" %in% assignment){
-    constrainedDiffsPerms = getConstrainedDiffsPerms.md(X = X, indicator = indicator, threshold = threshold, perms = perms)
+    constrainedDiffsPerms = getConstrainedDiffsPerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
     plot.x.vec = append(plot.x.vec, constrainedDiffsPerms)
     plot.y.vec = append(plot.y.vec, stats::density(constrainedDiffsPerms)$y)
   }
   if("constrained md" %in% assignment){
-    constrainedMDPerms = getConstrainedMDPerms.md(X = X, indicator = indicator, threshold = threshold, perms = perms)
+    constrainedMDPerms = getConstrainedMDPerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, perms = perms,
+      X.full = X.full)
     plot.x.vec = append(plot.x.vec, constrainedMDPerms)
     plot.y.vec = append(plot.y.vec, stats::density(constrainedMDPerms)$y)
   }
   if("blocked constrained diffs" %in% assignment){
-    blockedConstrainedDiffsPerms = getConstrainedDiffsBlockedPerms.md(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms)
+    blockedConstrainedDiffsPerms = getConstrainedDiffsBlockedPerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, threshold = threshold, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
     plot.x.vec = append(plot.x.vec, blockedConstrainedDiffsPerms)
     plot.y.vec = append(plot.y.vec, stats::density(blockedConstrainedDiffsPerms)$y)
   }
   if("blocked constrained md" %in% assignment){
-    blockedConstrainedMDPerms = getConstrainedMDBlockedPerms.md(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms)
+    blockedConstrainedMDPerms = getConstrainedMDBlockedPerms.md(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, threshold = threshold, perms = perms,
+      X.full)
     plot.x.vec = append(plot.x.vec, blockedConstrainedMDPerms)
     plot.y.vec = append(plot.y.vec, stats::density(blockedConstrainedMDPerms)$y)
   }
   #to get the xlim and ylim for the plot,
   #also consider the observed MD
-  md.obs = as.numeric(getMD(X, indicator = indicator))
+  md.obs = as.numeric(getMD(X.matched = X.matched, indicator.matched = indicator.matched, X.full = X.full))
   plot.x.max = max(c(plot.x.vec, md.obs))
   plot.y.max = max(plot.y.vec)
   if(plot.y.max == -Inf){plot.y.max = 1}

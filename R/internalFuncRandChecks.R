@@ -17,300 +17,386 @@ getBlockPerm = function(subclassIndicatorTable){
 
 #Internal function that permutes an indicator until
 #all absolute standardized covariate mean differences are below some threshold.
-permuteData.constrainedStandardizedCovMeanDiffs = function(X, indicator, threshold){
+permuteData.constrainedStandardizedCovMeanDiffs = function(X.matched, indicator.matched, threshold,
+  X.full = NULL, indicator.full = NULL){
   #First, permute the indicator
-  indicator = sample(indicator)
+  indicator.matched = sample(indicator.matched)
 
   #Now check if the absolute standardized covariate mean diffs are less than the threshold
-  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(X = X, indicator = indicator)
+  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
   #while there are absolute standardized covariate mean differences bigger than the threshold...
   while( sum( abs(standardizedCovMeanDiff.obs) > threshold) > 0 ){
-    indicator = sample(indicator)
-    standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(X = X, indicator = indicator)
+    indicator.matched = sample(indicator.matched)
+    standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
   }
-  return(indicator)
+  return(indicator.matched)
 }
 #Internal function that permutes an indicator within blocks until
 #all absolute standardized covariate mean differences are below some threshold.
-permuteData.blocked.constrainedStandardizedCovMeanDiffs = function(X, indicator, subclass, threshold){
+permuteData.blocked.constrainedStandardizedCovMeanDiffs = function(X.matched, indicator.matched,
+  subclass, threshold,
+  X.full = NULL, indicator.full = NULL){
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #To efficiently get block permutations,
   #we just need a table of the indicator and subclass
-  subclassIndicatorTable = table(subclass, indicator)
+  subclassIndicatorTable = table(subclass, indicator.matched)
 
   #Then, the block permutation is
-  indicator = getBlockPerm(subclassIndicatorTable)
+  indicator.matched = getBlockPerm(subclassIndicatorTable)
 
   #Now check if the absolute standardized covariate mean diffs are less than the threshold
-  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(X = X, indicator = indicator)
+  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
   #while there are absolute standardized covariate mean differences bigger than the threshold...
   while( sum( abs(standardizedCovMeanDiff.obs) > threshold) > 0 ){
-    indicator = getBlockPerm(subclassIndicatorTable)
-    standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(X = X, indicator = indicator)
+    indicator.matched = getBlockPerm(subclassIndicatorTable)
+    getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
   }
-  return(indicator)
+  return(indicator.matched)
 }
 
 #Internal function that permutes an indicator until
 #the Mahalanobis distance is below some threshold.
-permuteData.constrainedMD = function(X, indicator, threshold){
+permuteData.constrainedMD = function(X.matched, indicator.matched, threshold,
+  X.full = NULL){
   #First, permute the indicator
-  indicator = sample(indicator)
+  indicator.matched = sample(indicator.matched)
 
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+  #Note that we are using the covariate matrix in the full dataset here.
+  
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #Now check if the MD is less than the threshold
-  md.obs = getMD(X = X, indicator = indicator, covX.inv = covX.inv)
+  md.obs = getMD(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    covX.inv = covX.inv,
+    X.full = X.full)
 
   #while the MD is bigger than the threshold...
   while( md.obs > threshold ){
-    indicator = sample(indicator)
-    md.obs = getMD(X = X, indicator = indicator, covX.inv = covX.inv)
+    indicator.matched = sample(indicator.matched)
+    md.obs = getMD(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    covX.inv = covX.inv,
+    X.full = X.full)
   }
-  return(indicator)
+  return(indicator.matched)
 }
 
 #Internal function that permutes an indicator within blocks until
 #the Mahalanobis distance is below some threshold.
-permuteData.blocked.constrainedMD = function(X, indicator, subclass, threshold){
+permuteData.blocked.constrainedMD = function(X.matched, indicator.matched,
+  subclass, threshold,
+  X.full = NULL){
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #To efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+  
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
 
   #To efficiently get block permutations,
   #we just need a table of the indicator and subclass
-  subclassIndicatorTable = table(subclass, indicator)
+  subclassIndicatorTable = table(subclass, indicator.matched)
 
   #Then, the block permutation is
-  indicator = getBlockPerm(subclassIndicatorTable)
+  indicator.matched = getBlockPerm(subclassIndicatorTable)
 
   #Now check if the MD is less than the threshold
-  md.obs = getMD(X = X, indicator = indicator, covX.inv = covX.inv)
+  md.obs = getMD(X.matched = X.matched, indicator.matched = indicator.matched,
+    covX.inv = covX.inv,
+    X.full = X.full)
 
   #while the MD is bigger than the threshold...
   while( md.obs > threshold ){
-    indicator = getBlockPerm(subclassIndicatorTable)
-    md.obs = getMD(X = X, indicator = indicator, covX.inv = covX.inv)
+    indicator.matched = getBlockPerm(subclassIndicatorTable)
+    md.obs = getMD(X.matched = X.matched, indicator.matched = indicator.matched,
+    covX.inv = covX.inv,
+    X.full = X.full)
   }
-  return(indicator)
+  return(indicator.matched)
 }
 
 #Internal function that returns the standardized covariate mean differences
 #across many permutations of an indicator.
-getCompletePerms.balance = function(X, indicator, perms = 1000){
+getCompletePerms.balance = function(X.matched, indicator.matched, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #observed standardized covariate mean differences
-  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(X, indicator)
+  standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
 
   #permutations for the randomization test
-  indicator.permutations = replicate(perms, sample(indicator), simplify = FALSE)
+  indicator.permutations = replicate(perms, sample(indicator.matched), simplify = FALSE)
   #compute the vector of covariate mean differences for each permutation
   permutations.standardizedCovMeanDiffs = matrix(nrow = perms, ncol = K)
   for(i in 1:perms){
-    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator.permutations[[i]])
+    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched, indicator.matched = indicator.permutations[[i]],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.standardizedCovMeanDiffs)
 }
 #Internal function that returns the standardized covariate mean differences
 #across many block permutations of an indicator within a subclass.
-getBlockPerms.balance = function(X, indicator, subclass, perms = 1000){
+getBlockPerms.balance = function(X.matched, indicator.matched, subclass, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #To efficiently get block permutations,
   #we just need a table of the indicator and subclass
-  subclassIndicatorTable = table(subclass, indicator)
+  subclassIndicatorTable = table(subclass, indicator.matched)
 
   #Then, the set of block permutations is
   indicator.permutations = t(replicate(perms,
     getBlockPerm(subclassIndicatorTable), simplify = TRUE))
   #compute the vector of covariate mean differences for each permutation
-  permutations.covMeanDiffs = matrix(nrow = perms, ncol = ncol(X))
+  permutations.covMeanDiffs = matrix(nrow = perms, ncol = ncol(X.matched))
   for(i in 1:perms){
-    permutations.covMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator = indicator.permutations[i,])
+    permutations.covMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.permutations[i,],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.covMeanDiffs)
 }
 #Internal function that returns the standardized covariate mean differences
 #across many constrained permutations of an indicator.
 #(Here, we're constraining the standardized covariate mean differences.)
-getConstrainedDiffsPerms.balance = function(X, indicator, threshold, perms = 1000){
+getConstrainedDiffsPerms.balance = function(X.matched, indicator.matched, threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.constrainedStandardizedCovMeanDiffs(X = X, indicator = indicator, threshold = threshold),
+    permuteData.constrainedStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.matched, threshold = threshold,
+      X.full = X.full, indicator.full = indicator.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.standardizedCovMeanDiffs = matrix(nrow = perms, ncol = K)
   for(i in 1:perms){
-    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator.permutations[[i]])
+    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.standardizedCovMeanDiffs)
 }
 #Internal function that returns the standardized covariate mean differences
 #across many constrained blocked permutations of an indicator.
 #(Here, we're constraining the standardized covariate mean differences.)
-getConstrainedDiffsBlockedPerms.balance = function(X, indicator, subclass, threshold, perms = 1000){
+getConstrainedDiffsBlockedPerms.balance = function(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.blocked.constrainedStandardizedCovMeanDiffs(X = X, indicator = indicator, subclass = subclass, threshold = threshold),
+    permuteData.blocked.constrainedStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      X.full = X.full, indicator.full = indicator.full,
+      subclass = subclass, threshold = threshold),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.standardizedCovMeanDiffs = matrix(nrow = perms, ncol = K)
   for(i in 1:perms){
-    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator.permutations[[i]])
+    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.standardizedCovMeanDiffs)
 }
 #Internal function that returns the standardized covariate mean differences
 #across many constrained permutations of an indicator.
 #(Here, we're constraining the Mahalanobis distance.)
-getConstrainedMDPerms.balance = function(X, indicator, threshold, perms = 1000){
+getConstrainedMDPerms.balance = function(X.matched, indicator.matched, threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.constrainedMD(X = X, indicator = indicator, threshold = threshold),
+    permuteData.constrainedMD(X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold,
+      X.full = X.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.standardizedCovMeanDiffs = matrix(nrow = perms, ncol = K)
   for(i in 1:perms){
-    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator.permutations[[i]])
+    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.standardizedCovMeanDiffs)
 }
-getConstrainedMDBlockedPerms.balance = function(X, indicator, subclass, threshold, perms = 1000){
+getConstrainedMDBlockedPerms.balance = function(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.blocked.constrainedMD(X = X, indicator = indicator, subclass = subclass, threshold = threshold),
+    permuteData.blocked.constrainedMD(X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, threshold = threshold,
+      X.full = X.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.standardizedCovMeanDiffs = matrix(nrow = perms, ncol = K)
   for(i in 1:perms){
-    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(X, indicator.permutations[[i]])
+    permutations.standardizedCovMeanDiffs[i,] = getStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      X.full = X.full, indicator.full = indicator.full)
   }
   return(permutations.standardizedCovMeanDiffs)
 }
 
 #Internal function that returns the Mahalanobis distance (MD)
 #across many permutations of an indicator.
-getCompletePerms.md = function(X, indicator, perms = 1000){
+getCompletePerms.md = function(X.matched, indicator.matched,
+  perms = 1000,
+  X.full = NULL){
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #permutations for the randomization test
-  indicator.permutations = replicate(perms, sample(indicator), simplify = FALSE)
+  indicator.permutations = replicate(perms, sample(indicator.matched), simplify = FALSE)
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[[i]], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }
 
 #Internal function that returns the Mahalanobis distance (MD)
 #across many block permutations of an indicator within a subclass.
-getBlockPerms.md = function(X, indicator, subclass, perms = 1000){
+getBlockPerms.md = function(X.matched, indicator.matched,
+  subclass, perms = 1000,
+  X.full = NULL){
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  covX.inv = solve(as.matrix(stats::cov(X)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #To efficiently get block permutations,
   #we just need a table of the indicator and subclass
-  subclassIndicatorTable = table(subclass, indicator)
+  subclassIndicatorTable = table(subclass, indicator.matched)
+
+  #to efficiently compute the MD across permutations, it'll be helpful
+  #to compute the inverse of the covariate covariance matrix
+  #(which doesn't change across permutations)
+
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #Then, the set of block permutations is
   indicator.permutations = t(replicate(perms,
@@ -318,7 +404,9 @@ getBlockPerms.md = function(X, indicator, subclass, perms = 1000){
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[i,], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[i,],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }
@@ -326,42 +414,66 @@ getBlockPerms.md = function(X, indicator, subclass, perms = 1000){
 #Internal function that returns the Mahalanobis distance
 #across many constrained permutations of an indicator.
 #(Here, we're constraining the standardized covariate mean differences.)
-getConstrainedDiffsPerms.md = function(X, indicator, threshold, perms = 1000){
+getConstrainedDiffsPerms.md = function(X.matched, indicator.matched,
+  threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.constrainedStandardizedCovMeanDiffs(X = X, indicator = indicator, threshold = threshold),
+    permuteData.constrainedStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      X.full = X.full, indicator.full = indicator.full,
+      threshold = threshold),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[[i]], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }
 #Internal function that returns the Mahalanobis distance
 #across many constrained permutations of an indicator.
 #(Here, we're constraining the Mahalanobis distance.)
-getConstrainedMDPerms.md = function(X, indicator, threshold, perms = 1000){
+getConstrainedMDPerms.md = function(X.matched, indicator.matched,
+  threshold, perms = 1000,
+  X.full = NULL){
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+  
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.constrainedMD(X = X, indicator = indicator, threshold = threshold),
+    permuteData.constrainedMD(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold,
+      X.full = X.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[[i]], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }
@@ -369,34 +481,46 @@ getConstrainedMDPerms.md = function(X, indicator, threshold, perms = 1000){
 #Internal function that returns the Mahalanobis distance
 #across many constrained blocked permutations of an indicator.
 #(Here, we're constraining the standardized covariate mean differences.)
-getConstrainedDiffsBlockedPerms.md = function(X, indicator, subclass, threshold, perms = 1000){
+getConstrainedDiffsBlockedPerms.md = function(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #for efficiency purposes, it'll be helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+  
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.blocked.constrainedStandardizedCovMeanDiffs(X = X, indicator = indicator, subclass = subclass, threshold = threshold),
+    permuteData.blocked.constrainedStandardizedCovMeanDiffs(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, threshold = threshold,
+      X.full = X.full, indicator.full = indicator.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[[i]], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }
@@ -404,34 +528,45 @@ getConstrainedDiffsBlockedPerms.md = function(X, indicator, subclass, threshold,
 #Internal function that returns the Mahalanobis distance
 #across many constrained blocked permutations of an indicator.
 #(Here, we're constraining the Mahalanobis distance.)
-getConstrainedMDBlockedPerms.md = function(X, indicator, subclass, threshold, perms = 1000){
-  #for efficiency purposes, it'll be helpful to order the data by subclass
+getConstrainedMDBlockedPerms.md = function(X.matched, indicator.matched,
+  subclass, threshold, perms = 1000,
+  X.full = NULL){
+  #for efficiency purposes, it'll bgetCompletePerms.balancee helpful to order the data by subclass
 
   #collect covariates, indicator, and subclass into a dataframe
-  data = data.frame(X, indicator = indicator, subclass = subclass)
+  data = data.frame(X.matched, indicator.matched = indicator.matched, subclass = subclass)
 
   #order the data by subclass
   data = data[order(subclass),]
 
   #Now, the new X, indicator, and subclass are
-  X = as.matrix(subset(data, select = -c(indicator, subclass)))
-  indicator = data$indicator
+  X.matched = as.matrix(subset(data, select = -c(indicator.matched, subclass)))
+  indicator.matched = data$indicator.matched
   subclass = data$subclass
 
   #to efficiently compute the MD across permutations, it'll be helpful
   #to compute the inverse of the covariate covariance matrix
   #(which doesn't change across permutations)
-  covX.inv = solve(as.matrix(stats::cov(X)))
+  
+  #if X.full isn't provided, just use X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+  covX.inv = solve(as.matrix(stats::cov(X.full)))
 
   #first, collect the indicators that fulfill the balance constraint
   indicator.permutations = replicate(perms,
-    permuteData.blocked.constrainedMD(X = X, indicator = indicator, subclass = subclass, threshold = threshold),
+    permuteData.blocked.constrainedMD(X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, threshold = threshold,
+      X.full = X.full),
     simplify = FALSE)
 
   #compute the vector of covariate mean differences for each permutation
   permutations.md = vector(length = perms)
   for(i in 1:perms){
-    permutations.md[i] = getMD(X, indicator.permutations[[i]], covX.inv)
+    permutations.md[i] = getMD(X.matched = X.matched, indicator.matched = indicator.permutations[[i]],
+      covX.inv = covX.inv,
+      X.full = X.full)
   }
   return(permutations.md)
 }

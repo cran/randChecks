@@ -5,15 +5,22 @@
 \code{getMD} computes the Mahalanobis distance of the covariate means between a treatment and control group.
 }
 \usage{
-getMD(X, indicator, covX.inv = NULL)
+getMD(X.matched, indicator.matched,
+	covX.inv = NULL,
+	X.full = NULL)
 }
 \arguments{
-  \item{X}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates).}
-  \item{indicator}{A vector of 1s and 0s (e.g., denoting treatment and control).}
+  \item{X.matched}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the matched dataset.}
+  \item{indicator.matched}{A vector of 1s and 0s (e.g., denoting treatment and control) for the matched dataset.}
   \item{covX.inv}{The inverse of X's covariance matrix. Almost always this should be set to NULL, and \code{getMD} will compute the inverse of the covariance matrix automatically.}
+  \item{X.full}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the full, unmatched dataset if available.}
 }
 \value{
 The Mahalanobis distance of the covariate means between a treatment and control group.
+}
+
+\details{
+	The argument X.full (i.e., the covariate matrix for the full, unmatched dataset) is only used to correctly define the Mahalanobis distance after matching. Technically, the Mahalanobis distance should be standardized by the covariance matrix within the full, unmatched dataset, instead of within the matched dataset. If X.full is unspecified, the covariance matrix within the matched dataset is used instead. This distinction rarely leads to large differences in the resulting distance, and so researchers should feel comfortable only specifying X.matched and indicator.matched if only a matched dataset is available. Furthermore, if one wants to compute the Mahalanobis distance for a full, unmatched dataset, then they should only specify X.matched and indicator.matched.
 }
 
 \examples{
@@ -34,9 +41,11 @@ The Mahalanobis distance of the covariate means between a treatment and control 
 	indicator.matched.card = lalonde.matched.card$treat
 	
 	#the Mahalanobis distance for each dataset is:
-	getMD(X = X.lalonde, indicator = indicator.lalonde)
-	getMD(X = X.matched.ps, indicator = indicator.matched.ps)
-	getMD(X = X.matched.card, indicator = indicator.matched.card)
+	getMD(X.matched = X.lalonde, indicator.matched = indicator.lalonde)
+	getMD(X.matched = X.matched.ps, indicator.matched = indicator.matched.ps,
+		X.full = X.lalonde)
+	getMD(X.matched = X.matched.card, indicator.matched = indicator.matched.card,
+		X.full = X.lalonde)
 }
 
 \seealso{

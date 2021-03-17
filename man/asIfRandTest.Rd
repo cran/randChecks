@@ -20,24 +20,32 @@ In addition to specifying different assignment mechanisms, the user can specify 
 }
 }
 \usage{
-asIfRandTest(X, indicator,
+asIfRandTest(X.matched, indicator.matched,
   assignment = c("complete"),
   statistic = "mahalanobis",
   subclass = NULL, threshold = NULL,
-  perms = 1000)
+  perms = 1000,
+  X.full = NULL, indicator.full = NULL)
 }
 \arguments{
-  \item{X}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates).}
-  \item{indicator}{A vector of 1s and 0s (e.g., denoting treatment and control).}
+  \item{X.matched}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the matched dataset.}
+  \item{indicator.matched}{A vector of 1s and 0s (e.g., denoting treatment and control) for the matched dataset.}
   \item{assignment}{A vector of assignment mechanisms that the user wants to test; the user can test one assignment mechanism or multiple. The possible choices are "complete", "blocked", "constrained diffs", "constrained md", "blocked constrained diffs", and "blocked constrained md". See Description for more details on these assignment mechanisms.}
   \item{statistic}{The test statistic used in the randomization test. The choices are either "mahalanobis" (the Mahalanobis distance) or "diffs" (the standardized covariate mean differences). The former runs a global test and provides one p-value; the latter runs covariate-by-covariate tests and provides a p-value for each covariate.}
   \item{subclass}{A vector denoting the subclass/block for each subject/unit. This must be specified only if one of the blocked assignment mechanisms are used.}
   \item{threshold}{The threshold used within the constrained assignment mechanisms; thus, this must be specified only if one of the constrained assignment mechanisms are used. This can be a single number or a vector of numbers (e.g., if one wants to use a different threshold for each covariate when testing constrained-differences randomization).}
   \item{perms}{The number of permutations used within the randomization test. A larger number requires more computation time but results in a more consistent p-value.}
+  \item{X.full}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the full, unmatched dataset if available.}
+  \item{indicator.full}{A vector of 1s and 0s (e.g., denoting treatment and control) for the full, unmatched dataset if available.}
 }
 \value{
 p-values assessing as-if randomization of an indicator for different assignment mechanisms. If the Mahalanobis distance is used as a test statistic, then a vector of p-values is reported is reported (one for each assignment mechanism). If the standardized covariate mean differences are used as a test statistic, then a table of p-values is reported, where the rows correspond to assignment mechanisms and the columns correspond to covariates.
 }
+
+\details{
+	The arguments X.full and indicator.full (i.e., the covariate matrix and indicator for the full, unmatched dataset) are only used to correctly define the standardized covariate mean differences and Mahalanobis distance. Technically, the covariate mean differences should be standardized by the pooled variance within the full, unmatched dataset, instead of within the matched dataset. If X.full and indicator.full are unspecified, the pooled variance within the matched dataset is used for standardization instead. This distinction rarely leads to large differences in the resulting standardized covariate mean differences, and so researchers should feel comfortable only specifying X.matched and indicator.matched if only a matched dataset is available. Furthermore, if one wants to run this test for a full, unmatched dataset, then they should only specify X.matched and indicator.matched.
+}
+
 
 \examples{
 	#This loads the classic Lalonde (1986) dataset,
@@ -68,11 +76,11 @@ p-values assessing as-if randomization of an indicator for different assignment 
 	#testing complete randomization for the full dataset
 	#using the Mahalanobis distance.
 	#We reject complete randomization in this test.
-	# asIfRandTest(X = X.lalonde, indicator = indicator.lalonde)
+	asIfRandTest(X.matched = X.lalonde, indicator.matched = indicator.lalonde, perms = 50)
 	#testing complete randomization for the full dataset
 	#using standardized covariate mean differences.
 	#We reject complete randomization for most covariates:
-	asIfRandTest(X = X.lalonde, indicator = indicator.lalonde,
+	asIfRandTest(X.matched = X.lalonde, indicator.matched = indicator.lalonde,
   		statistic = "diffs",
   		perms = 50)
 
@@ -80,7 +88,8 @@ p-values assessing as-if randomization of an indicator for different assignment 
 	#for the propensity score matched dataset
 	#using the Mahalanobis distance.
 	#We reject both assignment mechanisms in this test.
-	asIfRandTest(X = X.matched.ps, indicator = indicator.matched.ps,
+	asIfRandTest(X.matched = X.matched.ps, indicator.matched = indicator.matched.ps,
+		X.full = X.lalonde, indicator.full = indicator.lalonde,
   		assignment = c("complete", "blocked"),
 		subclass = lalonde.matched.ps$subclass,
 		perms = 50)
@@ -89,7 +98,8 @@ p-values assessing as-if randomization of an indicator for different assignment 
 	#using the standardized covariate mean differences.
 	#We reject these assignment mechanisms for
 	#the race covariates (hispan and black):
-	asIfRandTest(X = X.matched.ps, indicator = indicator.matched.ps,
+	asIfRandTest(X.matched = X.matched.ps, indicator.matched = indicator.matched.ps,
+		X.full = X.lalonde, indicator.full = indicator.lalonde,
   		assignment = c("complete", "blocked"),
   		subclass = lalonde.matched.ps$subclass,
 		statistic = "diffs",
@@ -108,7 +118,8 @@ p-values assessing as-if randomization of an indicator for different assignment 
 	#First we'll run the test using the Mahalanobis distance.
 	#We fail to reject for the first two assignment mechanisms,
 	#but reject the third.
-	asIfRandTest(X = X.matched.card, indicator = indicator.matched.card,
+	asIfRandTest(X.matched = X.matched.card, indicator.matched = indicator.matched.card,
+		X.full = X.lalonde, indicator.full = indicator.lalonde,
   		assignment = c("complete", "blocked", "constrained md"),
   		subclass = lalonde.matched.card$subclass,
   		threshold = a,
@@ -116,7 +127,8 @@ p-values assessing as-if randomization of an indicator for different assignment 
   	#Now we'll run the test using the standardized covariate mean differences.
   	#Interestingly, you fail to reject for all three assignment mechanisms
   	#for all covariates:
-  	asIfRandTest(X = X.matched.card, indicator = indicator.matched.card,
+  	asIfRandTest(X.matched = X.matched.card, indicator.matched = indicator.matched.card,
+  		X.full = X.lalonde, indicator.full = indicator.lalonde,
   		assignment = c("complete", "blocked", "constrained md"),
   		subclass = lalonde.matched.card$subclass,
   		threshold = a,

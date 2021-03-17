@@ -5,15 +5,23 @@
 \code{getStandardizedCovMeanDiffs} computes the standardized covariate mean differences between a treatment and control group, defined as treatment minus control. The standardized covariate mean differences are defined as the covariate mean differences divided by the square-root of the pooled variance between groups.
 }
 \usage{
-getStandardizedCovMeanDiffs(X, indicator)
+getStandardizedCovMeanDiffs(X.matched, indicator.matched,
+	X.full = NULL, indicator.full = NULL)
 }
 \arguments{
-  \item{X}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates).}
-  \item{indicator}{A vector of 1s and 0s (e.g., denoting treatment and control).}
+  \item{X.matched}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the matched dataset.}
+  \item{indicator.matched}{A vector of 1s and 0s (e.g., denoting treatment and control) for the matched dataset.}
+  \item{X.full}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the full, unmatched dataset if available.}
+  \item{indicator.full}{A vector of 1s and 0s (e.g., denoting treatment and control) for the full, unmatched dataset if available.}
 }
 \value{
 The standardized covariate mean differences between a treatment and control group, defined as treatment minus control.
 }
+
+\details{
+	The arguments X.full and indicator.full (i.e., the covariate matrix and indicator for the full, unmatched dataset) are only used to correctly define the standardized covariate mean differences. Technically, the covariate mean differences should be standardized by the pooled variance within the full, unmatched dataset, instead of within the matched dataset. If X.full and indicator.full are unspecified, the pooled variance within the matched dataset is used for standardization instead. This distinction rarely leads to large differences in the resulting standardized covariate mean differences, and so researchers should feel comfortable only specifying X.matched and indicator.matched if only a matched dataset is available. Furthermore, if one wants to compute the standardized mean differences for a full, unmatched dataset, then they should only specify X.matched and indicator.matched.
+}
+
 \author{Zach Branson
 }
 
@@ -36,9 +44,19 @@ The standardized covariate mean differences between a treatment and control grou
 	
 	#the standardized covariate mean differences
 	#for these three datasets are:
-	getStandardizedCovMeanDiffs(X = X.lalonde, indicator = indicator.lalonde)
-	getStandardizedCovMeanDiffs(X = X.matched.ps, indicator = indicator.matched.ps)
-	getStandardizedCovMeanDiffs(X = X.matched.card, indicator = indicator.matched.card)
+	getStandardizedCovMeanDiffs(
+		X.matched = X.lalonde,
+		indicator.matched = indicator.lalonde)
+	getStandardizedCovMeanDiffs(
+		X.matched = X.matched.ps,
+		indicator.matched = indicator.matched.ps,
+		X.full = X.lalonde,
+		indicator.full = indicator.lalonde)
+	getStandardizedCovMeanDiffs(
+		X.matched = X.matched.card,
+		indicator.matched = indicator.matched.card,
+		X.full = X.lalonde,
+		indicator.full = indicator.lalonde)
 }
 
 \seealso{

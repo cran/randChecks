@@ -8,18 +8,19 @@
 #-constrained standardized diffs randomization ("constrained diffs")
 #-blocked constrained MD randomization ("blocked constrained md")
 #-blocked constrained standardized diffs randomization ("blocked constrained diffs")
-lovePlot = function(X, indicator,
+lovePlot = function(X.matched, indicator.matched,
   permQuantiles = FALSE,
   assignment = "complete",
   subclass = NULL, threshold = NULL,
-  alpha = 0.15, perms = 1000){
+  alpha = 0.15, perms = 1000,
+  X.full = NULL, indicator.full = NULL){
   #must provide a covariate matrix
-  if(is.null(X)){
-    stop("Error: Must provide a covariate matrix X.")
+  if(is.null(X.matched)){
+    stop("Error: Must provide a covariate matrix X.matched.")
   }
   #must provide an indicator
-  if(is.null(indicator)){
-    stop("Error: Must provide an indicator of 1s and 0s.")
+  if(is.null(indicator.matched)){
+    stop("Error: Must provide an indicator (indicator.matched) of 1s and 0s.")
   }
   #assignments must be one of the following:
   #-complete
@@ -50,10 +51,12 @@ lovePlot = function(X, indicator,
   }
 
   #compute standardized covariate mean differences
-  covMeanDiffs = getStandardizedCovMeanDiffs(X = X, indicator = indicator)
+  covMeanDiffs = getStandardizedCovMeanDiffs(
+    X.matched = X.matched, indicator.matched = indicator.matched,
+    X.full = X.full, indicator.full = indicator.full)
 
   #number of covariates
-  K = ncol(X)
+  K = ncol(X.matched)
 
   #get range of covMeanDiffs for plot limits
   plot.min = min( covMeanDiffs )
@@ -61,22 +64,40 @@ lovePlot = function(X, indicator,
 
   #first, compute the permutation quantiles (if desired)
   if(permQuantiles == TRUE & assignment == "complete"){
-    permutations.covMeanDiffs = getCompletePerms.balance(X = X, indicator = indicator, perms = perms)
+    permutations.covMeanDiffs = getCompletePerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   if(permQuantiles == TRUE & assignment == "blocked"){
-    permutations.covMeanDiffs = getBlockPerms.balance(X = X, indicator = indicator, subclass = subclass, perms = perms)
+    permutations.covMeanDiffs = getBlockPerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      subclass = subclass, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   if(permQuantiles == TRUE & assignment == "constrained diffs"){
-    permutations.covMeanDiffs = getConstrainedDiffsPerms.balance(X = X, indicator = indicator, threshold = threshold, perms = perms)
+    permutations.covMeanDiffs = getConstrainedDiffsPerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   if(permQuantiles == TRUE & assignment == "blocked constrained diffs"){
-    permutations.covMeanDiffs = getConstrainedDiffsBlockedPerms.balance(X = X, indicator = indicator, threshold = threshold, subclass = subclass, perms = perms)
+    permutations.covMeanDiffs = getConstrainedDiffsBlockedPerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, subclass = subclass, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   if(permQuantiles == TRUE & assignment == "constrained md"){
-    permutations.covMeanDiffs = getConstrainedMDPerms.balance(X = X, indicator = indicator, threshold = threshold, perms = perms)
+    permutations.covMeanDiffs = getConstrainedMDPerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   if(permQuantiles == TRUE & assignment == "blocked constrained md"){
-    permutations.covMeanDiffs = getConstrainedMDBlockedPerms.balance(X = X, indicator = indicator, threshold = threshold, subclass = subclass, perms = perms)
+    permutations.covMeanDiffs = getConstrainedMDBlockedPerms.balance(
+      X.matched = X.matched, indicator.matched = indicator.matched,
+      threshold = threshold, subclass = subclass, perms = perms,
+      X.full = X.full, indicator.full = indicator.full)
   }
   
   if(permQuantiles == TRUE){

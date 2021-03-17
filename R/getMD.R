@@ -8,29 +8,40 @@
 #\bar{X}_C is the vector of covariate means for control units,
 #and cov(X) is the covariate-covariance matrix.
 
+#Note that we make cov(X) correspond to
+#the covariate-covariance matrix in the full dataset,
+#rather than the matched dataset.
+
 #Sometimes it can be computationally efficient to provide
 #the inverse of cov(X) to this function; that can be provided
 #via the argument covX.inv
-getMD = function(X, indicator, covX.inv = NULL){
+getMD = function(X.matched, indicator.matched, covX.inv = NULL,
+  X.full = NULL){
 
-  data = data.frame(X, indicator = indicator)
+  #If the covariate matrix in the full dataset is not specified,
+  #just set it equal to X.matched.
+  if(is.null(X.full)){
+    X.full = X.matched
+  }
+
+  data = data.frame(X.matched, indicator.matched = indicator.matched)
   #treatment group
-  treatmentData = subset(data, indicator == 1)
+  treatmentData = subset(data, indicator.matched == 1)
   #control group
-  controlData = subset(data, indicator == 0)
+  controlData = subset(data, indicator.matched == 0)
 
   #now we can get rid of the indicator variable
-  treatmentData = subset(treatmentData, select = -c(indicator))
-  controlData = subset(controlData, select = -c(indicator))
+  treatmentData = subset(treatmentData, select = -c(indicator.matched))
+  controlData = subset(controlData, select = -c(indicator.matched))
 
   #covariate mean difference
   covMeanDiffs = colMeans(treatmentData) - colMeans(controlData)
   if(is.null(covX.inv)){
-    covX.inv = solve(as.matrix(stats::cov(X)))
+    covX.inv = solve(as.matrix(stats::cov(X.full)))
   }
 
   n = as.numeric(nrow(data))
-  n.t = as.numeric(sum(indicator))
+  n.t = as.numeric(sum(indicator.matched))
   md = ((n.t*(n-n.t))/n)*t(covMeanDiffs)%*%covX.inv%*%covMeanDiffs
   return(md)
 }

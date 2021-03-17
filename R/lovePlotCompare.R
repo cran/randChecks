@@ -3,7 +3,8 @@
 #X1 and X2 denote the covariate matrices for these two datasets
 #indicator1 and indicator2 denote the indicators for these two datasets.
 #dataNames denotes the names the user wants to give these datasets.
-lovePlotCompare = function(X1, indicator1, X2, indicator2, dataNames = c("Dataset1", "Dataset2")){
+lovePlotCompare = function(X1, indicator1, X2, indicator2, dataNames = c("Dataset1", "Dataset2"),
+  X.full = NULL, indicator.full = NULL){
   #must provide covariate matrices
   if(is.null(X1) | is.null(X2)){
     stop("Error: Must provide a covariate matrix X1 and a covariate matrix X2.")
@@ -18,8 +19,10 @@ lovePlotCompare = function(X1, indicator1, X2, indicator2, dataNames = c("Datase
   }
 
   #compute standardized covariate mean differences
-  covMeanDiffs1 = getStandardizedCovMeanDiffs(X = X1, indicator = indicator1)
-  covMeanDiffs2 = getStandardizedCovMeanDiffs(X = X2, indicator = indicator2)
+  covMeanDiffs1 = getStandardizedCovMeanDiffs(X.matched = X1, indicator.matched = indicator1,
+    X.full = X.full, indicator.full = indicator.full)
+  covMeanDiffs2 = getStandardizedCovMeanDiffs(X.matched = X2, indicator.matched = indicator2,
+    X.full = X.full, indicator.full = indicator.full)
 
   #number of covariates
   K = ncol(X1)

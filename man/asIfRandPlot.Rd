@@ -14,21 +14,28 @@
 
 }
 \usage{
-asIfRandPlot(X, indicator,
+asIfRandPlot(X.matched, indicator.matched,
   assignment = c("complete"),
   subclass = NULL, threshold = NULL,
-  perms = 1000)
+  perms = 1000,
+  X.full = NULL, indicator.full = NULL)
 }
 \arguments{
-  \item{X}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates).}
-  \item{indicator}{A vector of 1s and 0s (e.g., denoting treatment and control).}
+  \item{X.matched}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the matched dataset.}
+  \item{indicator.matched}{A vector of 1s and 0s (e.g., denoting treatment and control) for the matched dataset.}
   \item{assignment}{A vector of assignment mechanisms that the user wants to visualize; the user can test one assignment mechanism or multiple. The possible choices are "complete", "blocked", "constrained diffs", "constrained md", "blocked constrained diffs", and "blocked constrained md". See Description for more details on these assignment mechanisms.}
   \item{subclass}{A vector denoting the subclass/block for each subject/unit. This must be specified only if one of the blocked assignment mechanisms are used.}
   \item{threshold}{The threshold used within the constrained assignment mechanisms; thus, this must be specified only if one of the constrained assignment mechanisms are used. This can be a single number or a vector of numbers (e.g., if one wants to use a different threshold for each covariate when testing constrained-differences randomization).}
   \item{perms}{The number of permutations used within the randomization test. A larger number requires more computation time but results in a more consistent p-value.}
+  \item{X.full}{A covariate matrix (rows correspond to subjects/units; columns correspond to covariates) for the full, unmatched dataset if available.}
+  \item{indicator.full}{A vector of 1s and 0s (e.g., denoting treatment and control) for the full, unmatched dataset if available.}
 }
 \value{
 A plot showing the distribution of the Mahalanobis distance for different assignment mechanisms, along with the observed Mahalanobis distance. Also returns a p-value for each assignment mechanism - this is simply the area of the distribution more extreme than the observed Mahalanobis distance. This is the same as \code{asIfRandTest()} using the Mahalanobis distance as a test statistic.
+}
+
+\details{
+	The arguments X.full and indicator.full (i.e., the covariate matrix and indicator for the full, unmatched dataset) are only used to correctly define the standardized covariate mean differences and Mahalanobis distance. Technically, the covariate mean differences should be standardized by the pooled variance within the full, unmatched dataset, instead of within the matched dataset. If X.full and indicator.full are unspecified, the pooled variance within the matched dataset is used for standardization instead. This distinction rarely leads to large differences in the resulting standardized covariate mean differences, and so researchers should feel comfortable only specifying X.matched and indicator.matched if only a matched dataset is available. Furthermore, if one wants to make this plot for a full, unmatched dataset, then they should only specify X.matched and indicator.matched.
 }
 
 \examples{
@@ -65,14 +72,15 @@ A plot showing the distribution of the Mahalanobis distance for different assign
 	#Here, complete randomization clearly does not hold,
 	#because the observed Mahalanobis distance is far outside
 	#the complete randomization distribution.
-	asIfRandPlot(X = X.lalonde, indicator = indicator.lalonde, perms = 50)
+	asIfRandPlot(X.matched = X.lalonde, indicator.matched = indicator.lalonde, perms = 50)
 
 	#Assessing complete and block (paired) randomization for
 	#the propensity score matched dataset
 	#Again, complete and block randomization appear to not hold
 	#because the observed Mahalanobis distance is far outside
 	#the randomization distributions.
-	asIfRandTest(X = X.matched.ps, indicator = indicator.matched.ps,
+	asIfRandPlot(X.matched = X.matched.ps, indicator.matched = indicator.matched.ps,
+		X.full = X.lalonde, indicator.full = indicator,
   		assignment = c("complete", "blocked"),
   		subclass = lalonde.matched.ps$subclass,
   		perms = 50)
@@ -91,7 +99,8 @@ A plot showing the distribution of the Mahalanobis distance for different assign
 	#Here, these assignment mechanisms seem plausible,
 	#because the observed Mahalanobis distance is well
 	#within the randomization distributions.
-	asIfRandPlot(X = X.matched.card, indicator = indicator.matched.card,
+	asIfRandPlot(X.matched = X.matched.card, indicator.matched = indicator.matched.card,
+		X.full = X.lalonde, indicator.full = indicator,
   		assignment = c("complete", "blocked", "constrained md"),
   		subclass = lalonde.matched.card$subclass,
   		threshold = a,

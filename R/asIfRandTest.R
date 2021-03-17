@@ -10,19 +10,21 @@
 #Currently, the function supports the following test statistics:
 #-Mahalanobis distance (one p-value as a global test)
 #-standardized covariate mean differences (covariate-by-covariate p-values)
-asIfRandTest = function(X,
-  indicator,
+asIfRandTest = function(X.matched,
+  indicator.matched,
   assignment = c("complete"),
   statistic = "mahalanobis",
   subclass = NULL, threshold = NULL,
-  perms = 1000){
+  perms = 1000,
+  X.full = NULL,
+  indicator.full = NULL){
   #must provide a covariate matrix
-  if(is.null(X)){
-    stop("Error: Must provide a covariate matrix X.")
+  if(is.null(X.matched)){
+    stop("Error: Must provide a covariate matrix X.matched.")
   }
   #must provide an indicator
-  if(is.null(indicator)){
-    stop("Error: Must provide an indicator of 1s and 0s.")
+  if(is.null(indicator.matched)){
+    stop("Error: Must provide an indicator (indicator.matched) of 1s and 0s.")
   }
   #must provide an assignment mechanism
   if(is.null(assignment)){
@@ -74,25 +76,43 @@ asIfRandTest = function(X,
     #define these vectors, depending on which
     #assignment mechanisms the user selects.
     if("complete" %in% assignment){
-      compPerms = getCompletePerms.md(X = X, indicator = indicator, perms = perms)
+      compPerms = getCompletePerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        perms = perms,
+        X.full = X.full)
     }
     if("blocked" %in% assignment){
-      blockPerms = getBlockPerms.md(X = X, indicator = indicator, subclass = subclass, perms = perms)
+      blockPerms = getBlockPerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, perms = perms,
+        X.full = X.full)
     }
     if("constrained diffs" %in% assignment){
-      constrainedDiffsPerms = getConstrainedDiffsPerms.md(X = X, indicator = indicator, threshold = threshold, perms = perms)
+      constrainedDiffsPerms = getConstrainedDiffsPerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full)
     }
     if("constrained md" %in% assignment){
-      constrainedMDPerms = getConstrainedMDPerms.md(X = X, indicator = indicator, threshold = threshold, perms = perms)
+      constrainedMDPerms = getConstrainedMDPerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        threshold = threshold, perms = perms,
+        X.full = X.full)
     }
     if("blocked constrained diffs" %in% assignment){
-      blockedConstrainedDiffsPerms = getConstrainedDiffsBlockedPerms.md(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms)
+      blockedConstrainedDiffsPerms = getConstrainedDiffsBlockedPerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full)
     }
     if("blocked constrained md" %in% assignment){
-      blockedConstrainedMDPerms = getConstrainedMDBlockedPerms.md(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms)
+      blockedConstrainedMDPerms = getConstrainedMDBlockedPerms.md(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, threshold = threshold, perms = perms,
+        X.full = X.full)
     }
     #the observed MD is
-    md.obs = as.numeric(getMD(X, indicator = indicator))
+    md.obs = as.numeric(getMD(X.matched, indicator.matched = indicator.matched, X.full = X.full))
     #compute p-values for different assignment mechanisms
     assignment.pvalues = vector(length = length(assignment))
     for(i in 1:length(assignment.pvalues)){
@@ -124,7 +144,7 @@ asIfRandTest = function(X,
   #if the user chose the standardized covariate mean differences:
   if(statistic == "diffs"){
     #the number of covariates is
-    K = ncol(X)
+    K = ncol(X.matched)
 
     #matrix of standardized covariate mean diffs
     #across different assignment mechanisms
@@ -139,25 +159,45 @@ asIfRandTest = function(X,
     #define these matrices, depending on which
     #assignment mechanisms the user selects.
     if("complete" %in% assignment){
-      compPerms = abs(getCompletePerms.balance(X = X, indicator = indicator, perms = perms))
+      compPerms = abs(getCompletePerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     if("blocked" %in% assignment){
-      blockPerms = abs(getBlockPerms.balance(X = X, indicator = indicator, subclass = subclass, perms = perms))
+      blockPerms = abs(getBlockPerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     if("constrained diffs" %in% assignment){
-      constrainedDiffsPerms = abs(getConstrainedDiffsPerms.balance(X = X, indicator = indicator, threshold = threshold, perms = perms))
+      constrainedDiffsPerms = abs(getConstrainedDiffsPerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     if("constrained md" %in% assignment){
-      constrainedMDPerms = abs(getConstrainedMDPerms.balance(X = X, indicator = indicator, threshold = threshold, perms = perms))
+      constrainedMDPerms = abs(getConstrainedMDPerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     if("blocked constrained diffs" %in% assignment){
-      blockedConstrainedDiffsPerms = abs(getConstrainedDiffsBlockedPerms.balance(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms))
+      blockedConstrainedDiffsPerms = abs(getConstrainedDiffsBlockedPerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     if("blocked constrained md" %in% assignment){
-      blockedConstrainedMDPerms = abs(getConstrainedMDBlockedPerms.balance(X = X, indicator = indicator, subclass = subclass, threshold = threshold, perms = perms))
+      blockedConstrainedMDPerms = abs(getConstrainedMDBlockedPerms.balance(
+        X.matched = X.matched, indicator.matched = indicator.matched,
+        subclass = subclass, threshold = threshold, perms = perms,
+        X.full = X.full, indicator.full = indicator.full))
     }
     #the observed standardized covariate mean differences are
-    diffs.obs = abs(as.numeric(getStandardizedCovMeanDiffs(X, indicator = indicator)))
+    diffs.obs = abs(as.numeric(getStandardizedCovMeanDiffs(
+      X.matched, indicator.matched = indicator.matched,
+      X.full = X.full, indicator.full = indicator.full)))
     #compute p-values for different assignment mechanisms
     #Each row corresponds to an assignment mechanism
     #Each column corresponds to a covariate.
@@ -184,7 +224,7 @@ asIfRandTest = function(X,
     }
     #then, the table of p-values is:
     rownames(assignment.pvalues) = assignment
-    colnames(assignment.pvalues) = colnames(X)
+    colnames(assignment.pvalues) = colnames(X.matched)
     return(assignment.pvalues)
   }
 }
