@@ -67,7 +67,7 @@ permuteData.blocked.constrainedStandardizedCovMeanDiffs = function(X.matched, in
   #while there are absolute standardized covariate mean differences bigger than the threshold...
   while( sum( abs(standardizedCovMeanDiff.obs) > threshold) > 0 ){
     indicator.matched = getBlockPerm(subclassIndicatorTable)
-    getStandardizedCovMeanDiffs(
+    standardizedCovMeanDiff.obs = getStandardizedCovMeanDiffs(
     X.matched = X.matched, indicator.matched = indicator.matched,
     X.full = X.full, indicator.full = indicator.full)
   }

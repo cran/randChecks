@@ -1,4 +1,4 @@
-40922e954b99f200c97d119c793dc38f *DESCRIPTION
+8de25360b506b2261d8d96fedc8b9cc4 *DESCRIPTION
 72f3e34963695610aa247badf1517abb *LICENSE
 8b54e5a89fbda3af5e077053d40bec76 *NAMESPACE
 9a176a43b6e5a99352796c05bd97c181 *R/asIfRandPlot.R
@@ -6,7 +6,7 @@
 5d1aa22875dd2a8ca3409809b67a03a4 *R/getCovMeanDiffs.R
 092c8b57292766b8f95f92df38f2f79c *R/getMD.R
 d5ee9e72bbbc2a95db420ae0b4841e7d *R/getStandardizedCovMeanDiffs.R
-080412cbeba09621a32a99f2294e6215 *R/internalFuncRandChecks.R
+16114cbf1d8899168a1ec959c57004d1 *R/internalFuncRandChecks.R
 5b8c3d52c14ae7b3604cb7cdf9955a6c *R/lovePlot.R
 fb9632ccac6c6fc5999ca2089c69e1f6 *R/lovePlotCompare.R
 45e81a96b028fe16af178b8ef913da3b *data/lalondeMatches.rda
